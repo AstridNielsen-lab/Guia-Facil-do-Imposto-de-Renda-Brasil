@@ -42,24 +42,38 @@ const ChatBot: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer AIzaSyAuFi5KtPsMJI5IC8c5FjvYD5IbuBdwH_U`
+          'Authorization': `Bearer AIzaSyAqKoeuhvvgnvCzsQZu0RgnneZdrc5X3Bw`
         },
         body: JSON.stringify({
           contents: [{
             parts: [{
               text: `Você é Julio Campos Machado, um especialista em imposto de renda no Brasil. 
-                     Responda a seguinte pergunta de forma natural e profissional: ${userMessage}`
+                     Responda a seguinte pergunta de forma natural e profissional, sem usar caracteres especiais: ${userMessage}`
             }]
-          }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1024
+          }
         })
       });
 
+      if (!response.ok) {
+        throw new Error('Erro na resposta da API');
+      }
+
       const data = await response.json();
-      const botResponse = data.candidates[0].content.parts[0].text;
-      
-      setMessages(prev => [...prev, { text: botResponse, isBot: true }]);
-      speakMessage(botResponse);
+      if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+        const botResponse = data.candidates[0].content.parts[0].text;
+        setMessages(prev => [...prev, { text: botResponse, isBot: true }]);
+        speakMessage(botResponse);
+      } else {
+        throw new Error('Resposta inválida da API');
+      }
     } catch (error) {
+      console.error('Erro:', error);
       setMessages(prev => [...prev, { 
         text: 'Desculpe, ocorreu um erro. Por favor, tente novamente mais tarde.', 
         isBot: true 
